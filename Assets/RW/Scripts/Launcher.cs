@@ -1,37 +1,14 @@
-﻿/*
- * Copyright (c) 2020 Razeware LLC
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * Notwithstanding the foregoing, you may not use, copy, modify, merge, publish, 
- * distribute, sublicense, create a derivative work, and/or sell copies of the 
- * Software in any work that is designed, intended, or marketed for pedagogical or 
- * instructional purposes related to programming, coding, application development, 
- * or information technology.  Permission for such use, copying, modification,
- * merger, publication, distribution, sublicensing, creation of derivative works, 
- * or sale is expressly withheld.
- *    
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+﻿
 
 using UnityEngine;
 
 public class Launcher : MonoBehaviour
 {
+    private SpringJoint2D springJoint;
+    private Rigidbody2D rb;
+    private float force = 0f;
+    public float maxForce = 90f;
+
     // EfxZoom
     public GameObject efxZoomObj;
     private SpriteRenderer efxZoomRenderer;
@@ -66,6 +43,10 @@ public class Launcher : MonoBehaviour
         sounds = GameObject.Find("SoundObjects").GetComponent<SoundController>();
         pullSound = sounds.pulldown;
         shootSound = sounds.zonar;
+
+        springJoint = GetComponent<SpringJoint2D>();
+        springJoint.distance = 1f;
+        rb = GetComponent<Rigidbody2D>();
     }
 
     void Update()
@@ -96,6 +77,7 @@ public class Launcher : MonoBehaviour
             if (isKeyPress == false && isTouched == false && startTime != 0f)
             {
                 // #1
+                force = powerIndex * maxForce;
 
                 shootSound.Play();
                 // reset values & animation
@@ -128,4 +110,25 @@ public class Launcher : MonoBehaviour
             }
         }
     }
+
+    private void FixedUpdate()
+    {
+        // When force is not 0
+        if (force != 0)
+        {
+            // release springJoint and power up
+            springJoint.distance = 1f;
+            rb.AddForce(Vector3.up * force);
+            force = 0;
+        }
+
+        // When the plunger is held down
+        if (pressTime != 0)
+        {
+            // retract the springJoint distance and reduce the power
+            springJoint.distance = 0.8f;
+            rb.AddForce(Vector3.down * 400);
+        }
+    }
+
 }
